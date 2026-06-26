@@ -1,0 +1,16 @@
+# Active Database Type (options: h2, postgres)
+db.type=h2
+
+# ==========================================
+# H2 Configuration (Dev / Grading Mode)
+# ==========================================
+db.h2.url=jdbc:h2:./stockpilot;DB_CLOSE_DELAY=-1
+db.h2.user=sa
+db.h2.password=
+
+# ==========================================
+# PostgreSQL Configuration (Production Mode / For Fun)
+# ==========================================
+db.postgres.url=jdbc:postgresql://localhost:5432/stockpilot
+db.postgres.user=postgres
+db.postgres.password=postgres
