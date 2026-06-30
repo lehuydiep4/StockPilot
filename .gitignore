@@ -45,3 +45,10 @@ build/
 # Only ignore local/secret properties files if any
 *local.properties
 !*local.properties.example
+
+# Maven Shade Plugin
+dependency-reduced-pom.xml
+
+# H2 Database
+stockpilot.mv.db
+stockpilot.trace.db
