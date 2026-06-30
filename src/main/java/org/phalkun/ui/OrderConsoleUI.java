@@ -13,6 +13,7 @@ import java.util.*;
 
 public class OrderConsoleUI {
     private static final String ERROR_PREFIX = "[Error] ";
+    private static final String LINE_SEPARATOR = "----------------------------------------------------------------------";
 
     private final OrderService orderService;
     private final CustomerService customerService;
@@ -63,108 +64,20 @@ public class OrderConsoleUI {
             System.out.println("\n--- Create New Order ---");
 
             // 1. Pick a Customer
-            List<Customer> customers = customerService.getAllCustomers();
-            if (customers.isEmpty()) {
-                System.out.println(ERROR_PREFIX + "No customers found. Please register a customer first.");
+            Customer customer = selectCustomer();
+            if (customer == null) {
                 return;
             }
 
-            System.out.println("\nSelect a Customer:");
-            for (Customer c : customers) {
-                System.out.printf("ID: %-3d | Name: %-20s | Email: %s%n", c.getId(), c.getName(), c.getEmail());
-            }
-
-            System.out.print("Enter Customer ID: ");
-            Long customerId = Long.parseLong(scanner.nextLine().trim());
-            // Pre-validate customer existence
-            customerService.getCustomerById(customerId);
-
             // 2. Build the Cart
             Map<String, Integer> cart = new LinkedHashMap<>();
-            boolean cartLoop = true;
-
-            while (cartLoop) {
-                System.out.print("\nEnter Product SKU to add to cart: ");
-                String sku = scanner.nextLine().trim().toUpperCase();
-
-                Product product;
-                try {
-                    product = productService.getProductBySku(sku);
-                } catch (ProductNotFoundException e) {
-                    System.out.println(ERROR_PREFIX + "Product with SKU '" + sku + "' not found.");
-                    continue;
-                }
-
-                System.out.print("Enter Quantity (Available: " + product.getStockQuantity() + "): ");
-                int qty;
-                try {
-                    qty = Integer.parseInt(scanner.nextLine().trim());
-                    if (qty <= 0) {
-                        System.out.println(ERROR_PREFIX + "Quantity must be greater than 0.");
-                        continue;
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println(ERROR_PREFIX + "Invalid quantity format.");
-                    continue;
-                }
-
-                int existingQty = cart.getOrDefault(sku, 0);
-                if (product.getStockQuantity() < (existingQty + qty)) {
-                    System.out.println(ERROR_PREFIX + "Insufficient stock. Only " + product.getStockQuantity() + " available.");
-                    continue;
-                }
-
-                cart.put(sku, existingQty + qty);
-                System.out.println("[Success] Added to cart: " + product.getName() + " x" + qty);
-
-                printCurrentCart(cart);
-
-                System.out.println("\nCart Options:");
-                System.out.println("1. Add/Update Item");
-                System.out.println("2. Remove Item");
-                System.out.println("3. Proceed to Checkout");
-                System.out.print("Select choice: ");
-                String cartChoice = scanner.nextLine().trim();
-
-                if ("2".equals(cartChoice)) {
-                    System.out.print("Enter Product SKU to remove: ");
-                    String removeSku = scanner.nextLine().trim().toUpperCase();
-                    if (cart.containsKey(removeSku)) {
-                        cart.remove(removeSku);
-                        System.out.println("[Success] Removed from cart.");
-                    } else {
-                        System.out.println(ERROR_PREFIX + "SKU not in cart.");
-                    }
-                    printCurrentCart(cart);
-                } else if ("3".equals(cartChoice)) {
-                    if (cart.isEmpty()) {
-                        System.out.println(ERROR_PREFIX + "Cannot checkout with an empty cart.");
-                    } else {
-                        cartLoop = false;
-                    }
-                }
+            buildCartInteractive(cart);
+            if (cart.isEmpty()) {
+                return;
             }
 
             // 3. Select Discount Policy
-            System.out.println("\nSelect Discount Policy:");
-            System.out.println("1. No Discount");
-            System.out.println("2. Percentage Discount");
-            System.out.println("3. Bulk Discount");
-            System.out.print("Select choice: ");
-            String policyChoice = scanner.nextLine().trim();
-
-            DiscountPolicy discountPolicy = new NoDiscount();
-            if ("2".equals(policyChoice)) {
-                System.out.print("Enter Discount Percentage (e.g. 10 for 10%): ");
-                double pct = Double.parseDouble(scanner.nextLine().trim());
-                discountPolicy = new PercentageDiscount(BigDecimal.valueOf(pct / 100.0));
-            } else if ("3".equals(policyChoice)) {
-                System.out.print("Enter Bulk Minimum Quantity Threshold: ");
-                int threshold = Integer.parseInt(scanner.nextLine().trim());
-                System.out.print("Enter Discount Percentage for bulk items (e.g. 15 for 15%): ");
-                double bulkPct = Double.parseDouble(scanner.nextLine().trim());
-                discountPolicy = new BulkDiscount(threshold, BigDecimal.valueOf(bulkPct / 100.0));
-            }
+            DiscountPolicy discountPolicy = selectDiscountPolicy();
 
             // 4. Place Order
             System.out.print("\nPlace this order? (yes/no): ");
@@ -174,7 +87,7 @@ public class OrderConsoleUI {
                 return;
             }
 
-            Order placedOrder = orderService.placeOrder(customerId, cart, discountPolicy);
+            Order placedOrder = orderService.placeOrder(customer.getId(), cart, discountPolicy);
             System.out.println("[Success] Order placed successfully!");
             printInvoice(placedOrder);
 
@@ -187,6 +100,127 @@ public class OrderConsoleUI {
         }
     }
 
+    private Customer selectCustomer() {
+        List<Customer> customers = customerService.getAllCustomers();
+        if (customers.isEmpty()) {
+            System.out.println(ERROR_PREFIX + "No customers found. Please register a customer first.");
+            return null;
+        }
+
+        System.out.println("\nSelect a Customer:");
+        for (Customer c : customers) {
+            System.out.printf("ID: %-3d | Name: %-20s | Email: %s%n", c.getId(), c.getName(), c.getEmail());
+        }
+
+        System.out.print("Enter Customer ID: ");
+        Long customerId = Long.parseLong(scanner.nextLine().trim());
+        return customerService.getCustomerById(customerId);
+    }
+
+    private void buildCartInteractive(Map<String, Integer> cart) {
+        boolean cartLoop = true;
+        while (cartLoop) {
+            String sku = promptProductSku();
+            if (sku != null) {
+                int qty = promptQuantity(sku);
+                if (qty > 0 && addToCartIfStockAvailable(cart, sku, qty)) {
+                    printCurrentCart(cart);
+                    cartLoop = handleCartOptions(cart);
+                }
+            }
+        }
+    }
+
+    private String promptProductSku() {
+        System.out.print("\nEnter Product SKU to add to cart: ");
+        String sku = scanner.nextLine().trim().toUpperCase();
+        try {
+            productService.getProductBySku(sku);
+            return sku;
+        } catch (ProductNotFoundException e) {
+            System.out.println(ERROR_PREFIX + "Product with SKU '" + sku + "' not found.");
+            return null;
+        }
+    }
+
+    private int promptQuantity(String sku) {
+        Product product = productService.getProductBySku(sku);
+        System.out.print("Enter Quantity (Available: " + product.getStockQuantity() + "): ");
+        try {
+            int qty = Integer.parseInt(scanner.nextLine().trim());
+            if (qty <= 0) {
+                System.out.println(ERROR_PREFIX + "Quantity must be greater than 0.");
+                return -1;
+            }
+            return qty;
+        } catch (NumberFormatException e) {
+            System.out.println(ERROR_PREFIX + "Invalid quantity format.");
+            return -1;
+        }
+    }
+
+    private boolean addToCartIfStockAvailable(Map<String, Integer> cart, String sku, int qty) {
+        Product product = productService.getProductBySku(sku);
+        int existingQty = cart.getOrDefault(sku, 0);
+        if (product.getStockQuantity() < (existingQty + qty)) {
+            System.out.println(ERROR_PREFIX + "Insufficient stock. Only " + product.getStockQuantity() + " available.");
+            return false;
+        }
+        cart.put(sku, existingQty + qty);
+        System.out.println("[Success] Added to cart: " + product.getName() + " x" + qty);
+        return true;
+    }
+
+    private boolean handleCartOptions(Map<String, Integer> cart) {
+        System.out.println("\nCart Options:");
+        System.out.println("1. Add/Update Item");
+        System.out.println("2. Remove Item");
+        System.out.println("3. Proceed to Checkout");
+        System.out.print("Select choice: ");
+        String cartChoice = scanner.nextLine().trim();
+
+        if ("2".equals(cartChoice)) {
+            System.out.print("Enter Product SKU to remove: ");
+            String removeSku = scanner.nextLine().trim().toUpperCase();
+            if (cart.containsKey(removeSku)) {
+                cart.remove(removeSku);
+                System.out.println("[Success] Removed from cart.");
+            } else {
+                System.out.println(ERROR_PREFIX + "SKU not in cart.");
+            }
+            printCurrentCart(cart);
+        } else if ("3".equals(cartChoice)) {
+            if (cart.isEmpty()) {
+                System.out.println(ERROR_PREFIX + "Cannot checkout with an empty cart.");
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private DiscountPolicy selectDiscountPolicy() {
+        System.out.println("\nSelect Discount Policy:");
+        System.out.println("1. No Discount");
+        System.out.println("2. Percentage Discount");
+        System.out.println("3. Bulk Discount");
+        System.out.print("Select choice: ");
+        String policyChoice = scanner.nextLine().trim();
+
+        if ("2".equals(policyChoice)) {
+            System.out.print("Enter Discount Percentage (e.g. 10 for 10%): ");
+            double pct = Double.parseDouble(scanner.nextLine().trim());
+            return new PercentageDiscount(BigDecimal.valueOf(pct / 100.0));
+        } else if ("3".equals(policyChoice)) {
+            System.out.print("Enter Bulk Minimum Quantity Threshold: ");
+            int threshold = Integer.parseInt(scanner.nextLine().trim());
+            System.out.print("Enter Discount Percentage for bulk items (e.g. 15 for 15%): ");
+            double bulkPct = Double.parseDouble(scanner.nextLine().trim());
+            return new BulkDiscount(threshold, BigDecimal.valueOf(bulkPct / 100.0));
+        }
+        return new NoDiscount();
+    }
+
     private void printCurrentCart(Map<String, Integer> cart) {
         System.out.println("\n--- Current Cart ---");
         if (cart.isEmpty()) {
@@ -194,7 +228,7 @@ public class OrderConsoleUI {
             return;
         }
         System.out.printf("%-10s | %-25s | %-8s | %-12s | %-12s%n", "SKU", "NAME", "QTY", "PRICE", "SUBTOTAL");
-        System.out.println("----------------------------------------------------------------------");
+        System.out.println(LINE_SEPARATOR);
         BigDecimal cartTotal = BigDecimal.ZERO;
         for (Map.Entry<String, Integer> entry : cart.entrySet()) {
             Product p = productService.getProductBySku(entry.getKey());
@@ -203,7 +237,7 @@ public class OrderConsoleUI {
             cartTotal = cartTotal.add(subtotal);
             System.out.printf("%-10s | %-25s | %-8d | $%-11.2f | $%-11.2f%n", p.getSku(), truncate(p.getName(), 25), qty, p.getPrice(), subtotal);
         }
-        System.out.println("----------------------------------------------------------------------");
+        System.out.println(LINE_SEPARATOR);
         System.out.printf("Cart Subtotal: $%.2f%n", cartTotal);
     }
 
@@ -280,9 +314,9 @@ public class OrderConsoleUI {
         System.out.printf("Order ID:      %-10d | Date: %s%n", order.getId(), order.getOrderDate().toString().replace('T', ' ').substring(0, 19));
         System.out.printf("Customer Name: %-25s | Phone: %s%n", order.getCustomer().getName(), order.getCustomer().getPhone());
         System.out.printf("Customer Email:%-25s |%n", order.getCustomer().getEmail());
-        System.out.println("----------------------------------------------------------------------");
+        System.out.println(LINE_SEPARATOR);
         System.out.printf("%-10s | %-25s | %-8s | %-12s | %-12s%n", "SKU", "PRODUCT NAME", "QTY", "PRICE", "SUBTOTAL");
-        System.out.println("----------------------------------------------------------------------");
+        System.out.println(LINE_SEPARATOR);
         BigDecimal subtotal = BigDecimal.ZERO;
         for (OrderItem item : order.getItems()) {
             BigDecimal itemSubtotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
@@ -294,7 +328,7 @@ public class OrderConsoleUI {
                     item.getPrice(),
                     itemSubtotal);
         }
-        System.out.println("----------------------------------------------------------------------");
+        System.out.println(LINE_SEPARATOR);
         System.out.printf("Subtotal:                                                 $%-11.2f%n", subtotal);
         System.out.printf("Discount Applied:                                         $%-11.2f%n", order.getDiscountAmount());
         System.out.printf("Grand Total:                                              $%-11.2f%n", order.getTotalAmount());

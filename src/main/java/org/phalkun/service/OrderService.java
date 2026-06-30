@@ -98,8 +98,8 @@ public class OrderService {
         } catch (Exception e) {
             conn.rollback();
             logger.error("Transaction rolled back due to error placing order for customer ID: {}", customerId, e);
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
+            if (e instanceof RuntimeException runtimeException) {
+                throw runtimeException;
             }
             throw new DataAccessException("Order processing failed", e);
         }

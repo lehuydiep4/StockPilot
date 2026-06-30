@@ -12,7 +12,6 @@ import org.phalkun.repository.ProductRepository;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -157,8 +156,10 @@ class OrderServiceTest {
         Map<String, Integer> cart = new LinkedHashMap<>();
         cart.put("PRO-1001", 6); // requests more than available
 
+        DiscountPolicy discountPolicy = new NoDiscount();
+        Long customerId = c.getId();
         assertThrows(InsufficientStockException.class, () ->
-                orderService.placeOrder(c.getId(), cart, new NoDiscount())
+                orderService.placeOrder(customerId, cart, discountPolicy)
         );
 
         // Verify stock is not decremented (rollback behavior simulated)
@@ -171,8 +172,9 @@ class OrderServiceTest {
         Map<String, Integer> cart = new LinkedHashMap<>();
         cart.put("PRO-1001", 1);
 
+        DiscountPolicy discountPolicy = new NoDiscount();
         assertThrows(CustomerNotFoundException.class, () ->
-                orderService.placeOrder(99L, cart, new NoDiscount())
+                orderService.placeOrder(99L, cart, discountPolicy)
         );
     }
 
@@ -184,8 +186,10 @@ class OrderServiceTest {
         Map<String, Integer> cart = new LinkedHashMap<>();
         cart.put("NON-EXISTENT-SKU", 1);
 
+        DiscountPolicy discountPolicy = new NoDiscount();
+        Long customerId = c.getId();
         assertThrows(ProductNotFoundException.class, () ->
-                orderService.placeOrder(c.getId(), cart, new NoDiscount())
+                orderService.placeOrder(customerId, cart, discountPolicy)
         );
     }
 
