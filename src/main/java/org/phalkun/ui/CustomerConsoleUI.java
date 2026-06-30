@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class CustomerConsoleUI {
+    private static final String ERROR_PREFIX = "[Error] ";
     private final CustomerService customerService;
     private final Scanner scanner;
 
@@ -87,11 +88,11 @@ public class CustomerConsoleUI {
             printCustomerRow(customer);
             printCustomerFooter();
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid Customer ID format. ID must be a number.");
+            System.out.println(ERROR_PREFIX + "Invalid Customer ID format. ID must be a number.");
         } catch (CustomerNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] An error occurred: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "An error occurred: " + e.getMessage());
         }
     }
 
@@ -104,9 +105,9 @@ public class CustomerConsoleUI {
             printCustomerRow(customer);
             printCustomerFooter();
         } catch (CustomerNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] An error occurred: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "An error occurred: " + e.getMessage());
         }
     }
 
@@ -125,9 +126,9 @@ public class CustomerConsoleUI {
             Customer registered = customerService.registerCustomer(name, email, phone);
             System.out.println("[Success] Customer registered successfully with ID: " + registered.getId());
         } catch (InvalidInputException e) {
-            System.out.println("[Error] Validation failed: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Validation failed: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to register customer: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to register customer: " + e.getMessage());
         }
     }
 
@@ -151,14 +152,14 @@ public class CustomerConsoleUI {
             String phone = scanner.nextLine().trim();
             if (phone.isEmpty()) phone = existing.getPhone();
 
-            Customer updated = customerService.updateCustomer(id, name, email, phone);
+            customerService.updateCustomer(id, name, email, phone);
             System.out.println("[Success] Customer updated successfully.");
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid Customer ID format.");
+            System.out.println(ERROR_PREFIX + "Invalid Customer ID format.");
         } catch (CustomerNotFoundException | InvalidInputException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to update customer: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to update customer: " + e.getMessage());
         }
     }
 
@@ -170,22 +171,22 @@ public class CustomerConsoleUI {
             customerService.deleteCustomer(id);
             System.out.println("[Success] Customer with ID " + id + " was deleted successfully.");
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid Customer ID format.");
+            System.out.println(ERROR_PREFIX + "Invalid Customer ID format.");
         } catch (CustomerNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to delete customer: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to delete customer: " + e.getMessage());
         }
     }
 
     private void printCustomerHeader() {
         System.out.println("\n+-----+------------------------------+------------------------------------+-----------------+");
-        System.out.printf("| %-3s | %-28s | %-34s | %-15s |\n", "ID", "NAME", "EMAIL", "PHONE");
+        System.out.printf("| %-3s | %-28s | %-34s | %-15s |%n", "ID", "NAME", "EMAIL", "PHONE");
         System.out.println("+-----+------------------------------+------------------------------------+-----------------+");
     }
 
     private void printCustomerRow(Customer c) {
-        System.out.printf("| %-3d | %-28s | %-34s | %-15s |\n",
+        System.out.printf("| %-3d | %-28s | %-34s | %-15s |%n",
                 c.getId(),
                 truncate(c.getName(), 28),
                 truncate(c.getEmail(), 34),

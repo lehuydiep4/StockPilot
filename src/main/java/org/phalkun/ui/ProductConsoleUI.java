@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ProductConsoleUI {
+    private static final String ERROR_PREFIX = "[Error] ";
     private final ProductService productService;
     private final Scanner scanner;
 
@@ -92,11 +93,11 @@ public class ProductConsoleUI {
             printProductRow(product);
             printProductFooter();
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid Product ID format. ID must be a number.");
+            System.out.println(ERROR_PREFIX + "Invalid Product ID format. ID must be a number.");
         } catch (ProductNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] An error occurred: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "An error occurred: " + e.getMessage());
         }
     }
 
@@ -109,9 +110,9 @@ public class ProductConsoleUI {
             printProductRow(product);
             printProductFooter();
         } catch (ProductNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] An error occurred: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "An error occurred: " + e.getMessage());
         }
     }
 
@@ -136,11 +137,11 @@ public class ProductConsoleUI {
             Product created = productService.createProduct(sku, name, category, price, stock);
             System.out.println("[Success] Product created successfully with ID: " + created.getId());
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid input for price or stock quantity. Please enter numeric values.");
+            System.out.println(ERROR_PREFIX + "Invalid input for price or stock quantity. Please enter numeric values.");
         } catch (InvalidInputException e) {
-            System.out.println("[Error] Validation failed: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Validation failed: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to create product: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to create product: " + e.getMessage());
         }
     }
 
@@ -172,14 +173,14 @@ public class ProductConsoleUI {
             String stockStr = scanner.nextLine().trim();
             int stock = stockStr.isEmpty() ? existing.getStockQuantity() : Integer.parseInt(stockStr);
 
-            Product updated = productService.updateProduct(id, sku, name, category, price, stock);
+            productService.updateProduct(id, sku, name, category, price, stock);
             System.out.println("[Success] Product updated successfully.");
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid number input. Please try again.");
+            System.out.println(ERROR_PREFIX + "Invalid number input. Please try again.");
         } catch (ProductNotFoundException | InvalidInputException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to update product: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to update product: " + e.getMessage());
         }
     }
 
@@ -191,11 +192,11 @@ public class ProductConsoleUI {
             productService.deleteProduct(id);
             System.out.println("[Success] Product with ID " + id + " was deleted successfully.");
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid Product ID format.");
+            System.out.println(ERROR_PREFIX + "Invalid Product ID format.");
         } catch (ProductNotFoundException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to delete product: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to delete product: " + e.getMessage());
         }
     }
 
@@ -224,25 +225,25 @@ public class ProductConsoleUI {
                 Product updated = productService.adjustStockQuantity(id, delta);
                 System.out.println("[Success] Stock adjusted. New stock: " + updated.getStockQuantity());
             } else {
-                System.out.println("[Error] Invalid mode chosen.");
+                System.out.println(ERROR_PREFIX + "Invalid mode chosen.");
             }
         } catch (NumberFormatException e) {
-            System.out.println("[Error] Invalid numeric input.");
+            System.out.println(ERROR_PREFIX + "Invalid numeric input.");
         } catch (ProductNotFoundException | InvalidInputException e) {
-            System.out.println("[Error] " + e.getMessage());
+            System.out.println(ERROR_PREFIX + e.getMessage());
         } catch (Exception e) {
-            System.out.println("[Error] Failed to adjust stock: " + e.getMessage());
+            System.out.println(ERROR_PREFIX + "Failed to adjust stock: " + e.getMessage());
         }
     }
 
     private void printProductHeader() {
         System.out.println("\n+-----+----------+------------------------------+--------------------+------------+-------+");
-        System.out.printf("| %-3s | %-8s | %-28s | %-18s | %-10s | %-5s |\n", "ID", "SKU", "NAME", "CATEGORY", "PRICE ($)", "STOCK");
+        System.out.printf("| %-3s | %-8s | %-28s | %-18s | %-10s | %-5s |%n", "ID", "SKU", "NAME", "CATEGORY", "PRICE ($)", "STOCK");
         System.out.println("+-----+----------+------------------------------+--------------------+------------+-------+");
     }
 
     private void printProductRow(Product p) {
-        System.out.printf("| %-3d | %-8s | %-28s | %-18s | %-10.2f | %-5d |\n",
+        System.out.printf("| %-3d | %-8s | %-28s | %-18s | %-10.2f | %-5d |%n",
                 p.getId(),
                 p.getSku(),
                 truncate(p.getName(), 28),

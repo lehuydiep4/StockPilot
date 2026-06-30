@@ -8,7 +8,7 @@ public class Customer {
     // Basic email validation regex
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$");
     // Standard phone validation: optional '+' followed by 9 to 15 digits
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[0-9]{9,15}$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?\\d{9,15}$");
 
     private Long id;
     private String name;
