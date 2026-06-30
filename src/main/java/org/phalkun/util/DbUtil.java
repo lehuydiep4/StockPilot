@@ -63,4 +63,26 @@ public class DbUtil {
         }
         return provider.getConnection();
     }
+
+    public static void initDatabase() {
+        try (Connection conn = getConnection();
+             InputStream is = DbUtil.class.getClassLoader().getResourceAsStream("schema.sql")) {
+            if (is != null) {
+                String sql = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                try (java.sql.Statement stmt = conn.createStatement()) {
+                    for (String statement : sql.split(";")) {
+                        if (!statement.trim().isEmpty()) {
+                            stmt.execute(statement.trim());
+                        }
+                    }
+                }
+                logger.info("Database schema initialized successfully.");
+            } else {
+                logger.warn("schema.sql not found in classpath.");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to initialize database schema", e);
+        }
+    }
 }
+
