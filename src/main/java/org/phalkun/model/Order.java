@@ -3,6 +3,7 @@ package org.phalkun.model;
 import org.phalkun.exception.InvalidInputException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,20 +17,20 @@ public class Order {
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
     public Order() {
-        this.orderDate = LocalDateTime.now();
+        this.orderDate = LocalDateTime.now(ZoneId.systemDefault());
     }
 
     public Order(Long id, Customer customer, LocalDateTime orderDate, List<OrderItem> items, BigDecimal totalAmount, BigDecimal discountAmount) {
         setId(id);
         setCustomer(customer);
-        setOrderDate(orderDate != null ? orderDate : LocalDateTime.now());
+        setOrderDate(orderDate != null ? orderDate : LocalDateTime.now(ZoneId.systemDefault()));
         setItems(items != null ? items : new ArrayList<>());
         setTotalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO);
         setDiscountAmount(discountAmount != null ? discountAmount : BigDecimal.ZERO);
     }
 
     public Order(Customer customer) {
-        this(null, customer, LocalDateTime.now(), new ArrayList<>(), BigDecimal.ZERO, BigDecimal.ZERO);
+        this(null, customer, LocalDateTime.now(ZoneId.systemDefault()), new ArrayList<>(), BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     public Long getId() {

@@ -5,10 +5,10 @@ import org.phalkun.exception.DataAccessException;
 import org.phalkun.exception.InsufficientStockException;
 import org.phalkun.exception.ProductNotFoundException;
 import org.phalkun.model.Customer;
-import org.phalkun.model.DiscountPolicy;
 import org.phalkun.model.Order;
 import org.phalkun.model.OrderItem;
 import org.phalkun.model.Product;
+import org.phalkun.model.discount.DiscountPolicy;
 import org.phalkun.repository.CustomerRepository;
 import org.phalkun.repository.OrderRepository;
 import org.phalkun.repository.ProductRepository;
@@ -64,7 +64,7 @@ public class OrderService {
                 String sku = entry.getKey();
                 int qty = entry.getValue();
 
-                Product product = productRepository.findBySku(conn, sku)
+                Product product = productRepository.findBySkuForUpdate(conn, sku)
                         .orElseThrow(() -> new ProductNotFoundException("Product not found with SKU: " + sku));
 
                 if (product.getStockQuantity() < qty) {
@@ -113,5 +113,10 @@ public class OrderService {
         List<Order> orders = orderRepository.findAll();
         orders.sort(comparator);
         return orders;
+    }
+
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new DataAccessException("Order not found with ID: " + id, null));
     }
 }

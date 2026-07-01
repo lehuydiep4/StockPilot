@@ -1,5 +1,7 @@
-package org.phalkun.model;
+package org.phalkun.model.discount;
 
+import org.phalkun.model.Order;
+import org.phalkun.model.OrderItem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 

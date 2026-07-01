@@ -1,0 +1,17 @@
+sku,name,category,price,stockQuantity
+APP-1001,Apple iPhone 15,Electronics,999.00,50
+APP-1002,Apple MacBook Pro,Electronics,1999.00,20
+SAM-2001,Samsung Galaxy S24,Electronics,899.00,30
+SON-3001,Sony WH-1000XM5,Audio,349.00,100
+LOG-4001,Logitech MX Master 3S,Accessories,99.00,150
+DEL-1001,Dell XPS 15,Computers,1499.00,10
+NIN-5001,Nintendo Switch OLED,Gaming,349.99,80
+SON-5002,Sony PlayStation 5,Gaming,499.99,25
+MIC-5003,Microsoft Xbox Series X,Gaming,499.99,35
+ASU-6001,Asus ROG Zephyrus G14,Computers,1599.00,15
+LEN-6002,Lenovo ThinkPad X1 Carbon,Computers,1399.00,22
+BOS-3002,Bose QuietComfort 45,Audio,329.00,60
+JBL-3003,JBL Flip 6,Audio,99.95,120
+SAM-2002,Samsung Galaxy Tab S9,Electronics,799.00,45
+APP-1003,Apple iPad Air,Electronics,599.00,65
+GAR-7001,Garmin Forerunner 265,Wearables,449.99,40

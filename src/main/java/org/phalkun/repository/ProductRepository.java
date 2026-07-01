@@ -88,6 +88,19 @@ public class ProductRepository implements Repository<Product, Long> {
         return Optional.empty();
     }
 
+    public Optional<Product> findBySkuForUpdate(Connection conn, String sku) throws SQLException {
+        String sql = "SELECT id, sku, name, category, price, stock_quantity FROM products WHERE sku = ? FOR UPDATE";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, sku);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToProduct(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     @Override
     public List<Product> findAll() {
         try (Connection conn = DbUtil.getConnection()) {

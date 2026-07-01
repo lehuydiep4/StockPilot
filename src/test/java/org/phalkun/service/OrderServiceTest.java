@@ -5,7 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.phalkun.exception.CustomerNotFoundException;
 import org.phalkun.exception.InsufficientStockException;
 import org.phalkun.exception.ProductNotFoundException;
-import org.phalkun.model.*;
+import org.phalkun.model.Customer;
+import org.phalkun.model.Order;
+import org.phalkun.model.Product;
+import org.phalkun.model.discount.BulkDiscount;
+import org.phalkun.model.discount.DiscountPolicy;
+import org.phalkun.model.discount.NoDiscount;
+import org.phalkun.model.discount.PercentageDiscount;
 import org.phalkun.repository.CustomerRepository;
 import org.phalkun.repository.OrderRepository;
 import org.phalkun.repository.ProductRepository;
@@ -60,6 +66,11 @@ class OrderServiceTest {
 
             @Override
             public Optional<Product> findBySku(Connection conn, String sku) {
+                return findBySku(sku);
+            }
+
+            @Override
+            public Optional<Product> findBySkuForUpdate(Connection conn, String sku) {
                 return findBySku(sku);
             }
 

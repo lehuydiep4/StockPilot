@@ -52,3 +52,4 @@ dependency-reduced-pom.xml
 # H2 Database
 stockpilot.mv.db
 stockpilot.trace.db
+report.md
